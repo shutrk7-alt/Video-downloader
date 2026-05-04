@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ڤیدیۆ دابەزێنەر</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⬇</text></svg>" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #080b14; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #080b14; }
+    ::-webkit-scrollbar-thumb { background: #00c6ff44; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    const PLATFORMS = [
+      { id: "facebook",  name: "Facebook",  color: "#1877F2", icon: "📘", grad: "linear-gradient(135deg,#1877F2,#0d5abf)" },
+      { id: "instagram", name: "Instagram", color: "#E1306C", icon: "📸", grad: "linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)" },
+      { id: "tiktok",    name: "TikTok",    color: "#ff0050", icon: "🎵", grad: "linear-gradient(135deg,#010101,#ff0050)" },
+      { id: "threads",   name: "Threads",   color: "#aaaaaa", icon: "🧵", grad: "linear-gradient(135deg,#222,#555)" },
+      { id: "snapchat",  name: "Snapchat",  color: "#FFFC00", icon: "👻", grad: "linear-gradient(135deg,#FFFC00,#ffd700)" },
+      { id: "pinterest", name: "Pinterest", color: "#E60023", icon: "📌", grad: "linear-gradient(135deg,#E60023,#a0001a)" },
+    ];
+
+    const QUALITIES = ["1080p HD", "720p", "480p", "360p", "MP3 (دەنگ تەنها)"];
+
+    function detect(url) {
+      if (!url) return null;
+      if (url.includes("facebook.com") || url.includes("fb.watch")) return "facebook";
+      if (url.includes("instagram.com")) return "instagram";
+      if (url.includes("tiktok.com") || url.includes("vm.tiktok")) return "tiktok";
+      if (url.includes("threads.net")) return "threads";
+      if (url.includes("snapchat.com")) return "snapchat";
+      if (url.includes("pinterest.com") || url.includes("pin.it")) return "pinterest";
+      return null;
+    }
+
+    function App() {
+      const [url, setUrl] = useState("");
+      const [selected, setSelected] = useState(null);
+      const [quality, setQuality] = useState("720p");
+      const [loading, setLoading] = useState(false);
+      const [done, setDone] = useState(false);
+      const [error, setError] = useState("");
+
+      const detectedPlatform = detect(url);
+      const activePlatform = selected || detectedPlatform;
+      const plt = PLATFORMS.find(p => p.id === activePlatform);
+
+      const handleDownload = () => {
+        if (!url.trim()) { setError("تکایە لینکێک بنووسە!"); return; }
+        if (!url.startsWith("http")) { setError("لینکەکە دروست نییە، مەسەلەن: https://..."); return; }
+        setError("");
+        setLoading(true);
+        setDone(false);
+        setTimeout(() => {
+          setLoading(false);
+          setDone(true);
+          setTimeout(() => setDone(false), 4000);
+        }, 2200);
+      };
+
+      const handlePaste = async () => {
+        try {
+          const text = await navigator.clipboard.readText();
+          setUrl(text);
+          setError("");
+        } catch {
+          setError("تکایە لینکەکە بە دەست بکەوێنە.");
+        }
+      };
+
+      return (
+        <div style={s.root}>
+          <div style={s.bgGlow1} />
+          <div style={s.bgGlow2} />
+
+          {/* Header */}
+          <header style={s.header}>
+            <div style={s.logo}>
+              <div style={s.logoIcon}>⬇</div>
+              <div>
+                <div style={s.logoTitle}>ڤیدیۆ دابەزێنەر</div>
+                <div style={s.logoSub}>هەموو سۆشیاڵ مێدیاکان</div>
+              </div>
+            </div>
+            <div style={s.badge}>بەخۆڕایی ✨</div>
+          </header>
+
+          <main style={s.main}>
+            {/* Hero */}
+            <div style={s.hero}>
+              <h1 style={s.heroTitle}>ڤیدیۆی خۆت دابەزێنە</h1>
+              <p style={s.heroSub}>لینکی ڤیدیۆکەت بکەوێنە و دابەزێنە — ئاسان و خێرا</p>
+            </div>
+
+            {/* Platforms */}
+            <div style={s.platformGrid}>
+              {PLATFORMS.map(p => {
+                const active = selected === p.id || detectedPlatform === p.id;
+                return (
+                  <button key={p.id} onClick={() => setSelected(selected === p.id ? null : p.id)}
+                    style={{
+                      ...s.platformBtn,
+                      background: active ? p.grad : "rgba(255,255,255,0.05)",
+                      border: active ? `1px solid ${p.color}66` : "1px solid rgba(255,255,255,0.08)",
+                      boxShadow: active ? `0 0 24px ${p.color}33` : "none",
+                      color: p.id === "snapchat" && active ? "#000" : "#fff",
+                      transform: active ? "scale(1.04)" : "scale(1)",
+                    }}>
+                    <span style={{ fontSize: 24 }}>{p.icon}</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, marginTop: 4 }}>{p.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Card */}
+            <div style={s.card}>
+              {/* Input */}
+              <div style={s.inputLabel}>🔗 لینکی ڤیدیۆکە</div>
+              <div style={s.inputWrap}>
+                <input
+                  value={url}
+                  onChange={e => { setUrl(e.target.value); setError(""); }}
+                  placeholder="https://www.tiktok.com/..."
+                  style={{
+                    ...s.input,
+                    borderColor: error ? "#ff4d6d" : plt ? plt.color + "66" : "rgba(255,255,255,0.12)",
+                  }}
+                  dir="ltr"
+                />
+                <button onClick={handlePaste} style={s.pasteBtn}>📋 پێست</button>
+              </div>
+
+              {error && (
+                <div style={s.errorBox}>⚠️ {error}</div>
+              )}
+
+              {detectedPlatform && plt && (
+                <div style={{ ...s.detected, background: plt.color + "18", border: `1px solid ${plt.color}33` }}>
+                  <span>{plt.icon}</span>
+                  <span style={{ color: plt.color, fontWeight: 600 }}>{plt.name}</span>
+                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>— ئۆتۆماتیکی دیاریکرا</span>
+                </div>
+              )}
+
+              {/* Quality */}
+              <div style={s.qualityLabel}>🎬 کوالێتی دابەزێنەکە:</div>
+              <div style={s.qualityRow}>
+                {QUALITIES.map(q => (
+                  <button key={q} onClick={() => setQuality(q)} style={{
+                    ...s.qualityBtn,
+                    background: quality === q ? "linear-gradient(135deg,#00c6ff,#0072ff)" : "rgba(255,255,255,0.06)",
+                    border: quality === q ? "1px solid #00c6ff55" : "1px solid rgba(255,255,255,0.08)",
+                    fontWeight: quality === q ? 700 : 400,
+                    boxShadow: quality === q ? "0 4px 14px rgba(0,114,255,0.3)" : "none",
+                  }}>{q}</button>
+                ))}
+              </div>
+
+              {/* Download Button */}
+              <button onClick={handleDownload} disabled={loading} style={{
+                ...s.dlBtn,
+                background: done
+                  ? "linear-gradient(135deg,#00b09b,#96c93d)"
+                  : loading
+                  ? "rgba(255,255,255,0.08)"
+                  : plt ? plt.grad : "linear-gradient(135deg,#00c6ff,#0072ff)",
+                cursor: loading ? "not-allowed" : "pointer",
+                boxShadow: done ? "0 8px 30px rgba(0,176,155,0.4)" : "0 8px 30px rgba(0,114,255,0.35)",
+              }}>
+                {loading ? "⏳  چاوەڕوانبە..." : done ? "✅  ئامادەیە! دابەزێنە" : "⬇  دابەزێنە"}
+              </button>
+
+              {done && (
+                <div style={s.successBox}>
+                  🎉 ڤیدیۆکەت ئامادەیە بە کوالێتی <strong>{quality}</strong>
+                </div>
+              )}
+            </div>
+
+            {/* How to use */}
+            <div style={s.howBox}>
+              <h3 style={s.howTitle}>📖 چۆن بەکاریبهێنیت؟</h3>
+              {[
+                ["١", "بکەرەوە سۆشیاڵ مێدیاکەت و ڤیدیۆکە بدۆزەرەوە"],
+                ["٢", "کلیکی Share بکە و لینکەکە کۆپی بکە"],
+                ["٣", "لینکەکە لێرە پێست بکە"],
+                ["٤", "کوالێتی هەڵبژێرە و کلیکی دابەزێنە بکە"],
+              ].map(([n, t]) => (
+                <div key={n} style={s.step}>
+                  <div style={s.stepNum}>{n}</div>
+                  <div style={s.stepText}>{t}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Supported platforms */}
+            <div style={s.supportedBox}>
+              <div style={s.supportedTitle}>پشتگیری دەکرێت لە:</div>
+              <div style={s.supportedRow}>
+                {PLATFORMS.map(p => (
+                  <span key={p.id} style={{ ...s.tag, color: p.color, border: `1px solid ${p.color}33` }}>
+                    {p.icon} {p.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </main>
+
+          <footer style={s.footer}>
+            دروستکرا بە ❤️ بۆ بەکارهێنەرانی کوردی
+          </footer>
+        </div>
+      );
+    }
+
+    const s = {
+      root: {
+        minHeight: "100vh",
+        background: "#080b14",
+        color: "#fff",
+        fontFamily: "'Segoe UI', Tahoma, Arial, sans-serif",
+        direction: "rtl",
+        position: "relative",
+        overflowX: "hidden",
+      },
+      bgGlow1: {
+        position: "fixed", width: 500, height: 500, borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(0,114,255,0.07), transparent 70%)",
+        top: -150, right: -100, pointerEvents: "none", zIndex: 0,
+      },
+      bgGlow2: {
+        position: "fixed", width: 400, height: 400, borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(0,198,255,0.05), transparent 70%)",
+        bottom: "5%", left: "-5%", pointerEvents: "none", zIndex: 0,
+      },
+      header: {
+        position: "relative", zIndex: 10,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "18px 24px",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        background: "rgba(8,11,20,0.85)",
+        backdropFilter: "blur(12px)",
+      },
+      logo: { display: "flex", alignItems: "center", gap: 12 },
+      logoIcon: {
+        width: 42, height: 42, borderRadius: 12,
+        background: "linear-gradient(135deg,#00c6ff,#0072ff)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 20, boxShadow: "0 4px 18px rgba(0,114,255,0.4)",
+      },
+      logoTitle: { fontSize: 17, fontWeight: 700 },
+      logoSub: { fontSize: 11, color: "rgba(255,255,255,0.38)", marginTop: 2 },
+      badge: {
+        background: "rgba(0,198,255,0.1)", border: "1px solid rgba(0,198,255,0.25)",
+        color: "#00c6ff", padding: "5px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600,
+      },
+      main: { position: "relative", zIndex: 5, maxWidth: 660, margin: "0 auto", padding: "28px 16px 40px" },
+      hero: { textAlign: "center", marginBottom: 28 },
+      heroTitle: {
+        fontSize: "clamp(1.6rem,6vw,2.6rem)", fontWeight: 800, margin: 0,
+        background: "linear-gradient(135deg,#fff 30%,#00c6ff)",
+        WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+        lineHeight: 1.3,
+      },
+      heroSub: { color: "rgba(255,255,255,0.4)", marginTop: 10, fontSize: 14 },
+      platformGrid: {
+        display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, marginBottom: 24,
+      },
+      platformBtn: {
+        all: "unset", cursor: "pointer",
+        padding: "14px 6px", borderRadius: 16,
+        display: "flex", flexDirection: "column", alignItems: "center",
+        transition: "all 0.2s ease",
+      },
+      card: {
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 24, padding: "24px 20px",
+        backdropFilter: "blur(20px)",
+        boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
+        marginBottom: 24,
+      },
+      inputLabel: { fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 10 },
+      inputWrap: { display: "flex", gap: 8, marginBottom: 12 },
+      input: {
+        flex: 1, background: "rgba(255,255,255,0.06)",
+        border: "1px solid rgba(255,255,255,0.12)",
+        borderRadius: 12, padding: "13px 14px",
+        color: "#fff", fontSize: 13, outline: "none",
+        transition: "border 0.2s",
+        fontFamily: "monospace",
+      },
+      pasteBtn: {
+        all: "unset", cursor: "pointer",
+        background: "rgba(255,255,255,0.08)",
+        border: "1px solid rgba(255,255,255,0.12)",
+        borderRadius: 12, padding: "0 16px",
+        fontSize: 13, color: "rgba(255,255,255,0.7)",
+        whiteSpace: "nowrap",
+      },
+      errorBox: {
+        color: "#ff4d6d", fontSize: 13, marginBottom: 12,
+        background: "rgba(255,77,109,0.08)", padding: "9px 13px",
+        borderRadius: 10, border: "1px solid rgba(255,77,109,0.2)",
+      },
+      detected: {
+        display: "flex", alignItems: "center", gap: 8,
+        padding: "8px 13px", borderRadius: 10, marginBottom: 16,
+        fontSize: 13,
+      },
+      qualityLabel: { fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 10 },
+      qualityRow: { display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 },
+      qualityBtn: {
+        all: "unset", cursor: "pointer",
+        padding: "7px 14px", borderRadius: 10, fontSize: 12,
+        color: "#fff", transition: "all 0.2s",
+      },
+      dlBtn: {
+        all: "unset",
+        display: "block", width: "100%",
+        padding: "16px", borderRadius: 16,
+        textAlign: "center", fontSize: 16, fontWeight: 700,
+        color: "#fff", transition: "all 0.3s ease",
+        letterSpacing: 0.5,
+      },
+      successBox: {
+        marginTop: 14, textAlign: "center",
+        color: "#96c93d", fontSize: 14,
+        background: "rgba(150,201,61,0.08)", padding: "10px",
+        borderRadius: 10, border: "1px solid rgba(150,201,61,0.2)",
+      },
+      howBox: {
+        background: "rgba(255,255,255,0.03)",
+        border: "1px solid rgba(255,255,255,0.07)",
+        borderRadius: 20, padding: "22px 20px", marginBottom: 22,
+      },
+      howTitle: { fontSize: 15, color: "rgba(255,255,255,0.65)", marginBottom: 18 },
+      step: { display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 14 },
+      stepNum: {
+        width: 30, height: 30, borderRadius: "50%", flexShrink: 0,
+        background: "linear-gradient(135deg,#00c6ff,#0072ff)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 13, fontWeight: 700, boxShadow: "0 4px 12px rgba(0,114,255,0.3)",
+      },
+      stepText: { fontSize: 13, color: "rgba(255,255,255,0.6)", paddingTop: 6, lineHeight: 1.6 },
+      supportedBox: { textAlign: "center" },
+      supportedTitle: { fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 12 },
+      supportedRow: { display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" },
+      tag: {
+        padding: "5px 12px", borderRadius: 20, fontSize: 12,
+        background: "rgba(255,255,255,0.04)",
+      },
+      footer: {
+        position: "relative", zIndex: 5,
+        textAlign: "center", padding: "22px",
+        color: "rgba(255,255,255,0.2)", fontSize: 12,
+        borderTop: "1px solid rgba(255,255,255,0.05)",
+      },
+    };
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
